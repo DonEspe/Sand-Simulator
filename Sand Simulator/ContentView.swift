@@ -33,8 +33,11 @@ struct ContentView: View {
                     for y in 0..<playSize.height {
                         for x in 0..<playSize.width {
                             context.fill(
-                                Path(ellipseIn: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2))),
-                                with: .color(particleColor(particle: map[x][y])))
+//                                Path(ellipseIn: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2))),
+//                                with: .color(particleColor(particle: map[x][y])))
+
+                            Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2)), cornerSize: CGSize(width: 0, height: 0)),
+                                 with: .color(particleColor(particle: map[x][y])))
                         }
                     }
                 }
@@ -43,8 +46,7 @@ struct ContentView: View {
                         .onChanged { value in
                             paused = true
                             let useLocation = (x: Int(value.location.x / 2), y: Int(value.location.y / 2))
-                            print(useLocation)
-                            if useLocation.y < playSize.height - 1 && useLocation.x < playSize.width - 1 && useLocation.x > 1 && useLocation.y > 1 {
+                            if useLocation.y < playSize.height - 1 && useLocation.x < playSize.width - 1 && useLocation.x > 0 && useLocation.y > 0 {
                                 map[useLocation.x][useLocation.y].type = drawType
                                 map[useLocation.x + 1][useLocation.y].type = drawType
                                 map[useLocation.x][useLocation.y + 1].type = drawType
@@ -52,7 +54,7 @@ struct ContentView: View {
                             }
                         }
                         .onEnded { _ in
-                            paused = false
+//                            paused = false
                         }
                 )
 
@@ -67,6 +69,10 @@ struct ContentView: View {
                 }
             }
             .pickerStyle(.segmented)
+
+            Toggle(isOn: $paused) {
+                Text("Pause")
+            }
 
             Spacer()
         }
@@ -101,70 +107,138 @@ struct ContentView: View {
             return particles
         }
         var tempMap = particles
+        var neighbors = [Neighbor]()
         switch particle.type {
             case .sand:
-//                if position.y < playSize.height - 1 && tempMap[position.x][position.y + 1].type == .sand {
-//                    print("sand place...")
+                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.water, .none]) {
+                    neighbors.append(down)
+                }
+                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: 0.5, open: [.water, .none]) {
+                    neighbors.append(downRight)
+                }
+                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: 0.5, open: [.water, .none]){
+                    neighbors.append(downLeft)
+                }
+                if let right = calcNeighbor(position: (x: position.x - 1, y: position.y), priority: 0.1, open: [.none]) {
+                    neighbors.append(right)
+                }
+                if let left = calcNeighbor(position: (x: position.x + 1, y: position.y), priority: 0.1, open: [.none]){
+                    neighbors.append(left)
+                }
+
+//                if position.y < playSize.height - 1 && tempMap[position.x][position.y + 1].type == .none {
+//                    tempMap[position.x][position.y].type = .none
+//                    tempMap[position.x][position.y + 1].type = .sand
 //                    return tempMap
 //                }
-                if position.y < playSize.height - 1 && tempMap[position.x][position.y + 1].type == .none {
-                    tempMap[position.x][position.y].type = .none
-                    tempMap[position.x][position.y + 1].type = .sand
-                    return tempMap
-                }
-                if position.y < playSize.height - 1 && tempMap[position.x][position.y + 1].type == .water {
-                    tempMap[position.x][position.y].type = .water
-                    tempMap[position.x][position.y + 1].type = .sand
-                    return tempMap
-                }
-                if position.y < playSize.height - 1 && position.x < playSize.width - 1 && tempMap[position.x + 1][position.y + 1].type == .none {
-                    tempMap[position.x][position.y].type = .none
-                    tempMap[position.x + 1][position.y + 1].type = .sand
-                    return tempMap
-                }
-                if position.y < playSize.height - 1 && position.x < playSize.width - 1 && tempMap[position.x + 1][position.y + 1].type == .water {
-                    tempMap[position.x][position.y].type = .water
-                    tempMap[position.x + 1][position.y + 1].type = .sand
-                    return tempMap
-                }
-                if position.y < playSize.height - 1 && position.x > 0 && tempMap[position.x - 1][position.y + 1].type == .none {
-                    tempMap[position.x][position.y].type = .none
-                    tempMap[position.x - 1][position.y + 1].type = .sand
-                    return tempMap
-                }
-                if position.y < playSize.height - 1 && position.x > 0 && tempMap[position.x - 1][position.y + 1].type == .water {
-                    tempMap[position.x][position.y].type = .water
-                    tempMap[position.x - 1][position.y + 1].type = .sand
-                    return tempMap
-                }
+//                if position.y < playSize.height - 1 && tempMap[position.x][position.y + 1].type == .water {
+//                    tempMap[position.x][position.y].type = .water
+//                    tempMap[position.x][position.y + 1].type = .sand
+//                    return tempMap
+//                }
+//                if position.y < playSize.height - 1 && position.x < playSize.width - 1 && tempMap[position.x + 1][position.y + 1].type == .none {
+//                    tempMap[position.x][position.y].type = .none
+//                    tempMap[position.x + 1][position.y + 1].type = .sand
+//                    return tempMap
+//                }
+//                if position.y < playSize.height - 1 && position.x < playSize.width - 1 && tempMap[position.x + 1][position.y + 1].type == .water {
+//                    tempMap[position.x][position.y].type = .water
+//                    tempMap[position.x + 1][position.y + 1].type = .sand
+//                    return tempMap
+//                }
+//                if position.y < playSize.height - 1 && position.x > 0 && tempMap[position.x - 1][position.y + 1].type == .none {
+//                    tempMap[position.x][position.y].type = .none
+//                    tempMap[position.x - 1][position.y + 1].type = .sand
+//                    return tempMap
+//                }
+//                if position.y < playSize.height - 1 && position.x > 0 && tempMap[position.x - 1][position.y + 1].type == .water {
+//                    tempMap[position.x][position.y].type = .water
+//                    tempMap[position.x - 1][position.y + 1].type = .sand
+//                    return tempMap
+//                }
             case .solid:
                 return tempMap
             case .water:
-                if position.y < playSize.height - 1 && tempMap[position.x][position.y + 1].type == .none {
-                    tempMap[position.x][position.y].type = .none
-                    tempMap[position.x][position.y + 1].type = .water
-                    return tempMap
+
+                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.none]) {
+                    neighbors.append(down)
                 }
-//                if position.y < playSize.height - 1 && tempMap[position.x][position.y + 1].type == .sand {
-//                    tempMap[position.x][position.y].type = .sand
+                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: 0.5, open: [.none]) {
+                    neighbors.append(downRight)
+                }
+                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: 0.5, open: [.none]){
+                    neighbors.append(downLeft)
+                }
+                if let right = calcNeighbor(position: (x: position.x - 1, y: position.y), priority: 0.5, open: [.none]) {
+                    neighbors.append(right)
+                }
+                if let left = calcNeighbor(position: (x: position.x + 1, y: position.y), priority: 0.5, open: [.none]){
+                    neighbors.append(left)
+                }
+
+//                if position.y < playSize.height - 1 && tempMap[position.x][position.y + 1].type == .none {
+//                    tempMap[position.x][position.y].type = .none
 //                    tempMap[position.x][position.y + 1].type = .water
 //                    return tempMap
 //                }
-                if position.x < playSize.width - 1 && tempMap[position.x + 1][position.y ].type == .none {
-                    tempMap[position.x][position.y].type = .none
-                    tempMap[position.x + 1][position.y ].type = .water
-                    return tempMap
-                }
-                if  position.x > 0 && tempMap[position.x - 1][position.y].type == .none {
-                    tempMap[position.x][position.y].type = .none
-                    tempMap[position.x - 1][position.y].type = .water
-                    return tempMap
-                }
+//
+//                if position.x < playSize.width - 1 && tempMap[position.x + 1][position.y ].type == .none {
+//                    tempMap[position.x][position.y].type = .none
+//                    tempMap[position.x + 1][position.y ].type = .water
+//                    return tempMap
+//                }
+//                if  position.x > 0 && tempMap[position.x - 1][position.y].type == .none {
+//                    tempMap[position.x][position.y].type = .none
+//                    tempMap[position.x - 1][position.y].type = .water
+//                    return tempMap
+//                }
             case .none:
                 return tempMap
         }
+        var finalChoice:Neighbor? = nil
 
-        return particles
+        if let highestRank = neighbors.max(by: { $0.priority < $1.priority }) {
+                        let choices = neighbors.filter {
+                            $0.priority == highestRank.priority
+                        }
+            finalChoice = choices.randomElement()
+        }
+            switch particle.type
+            {
+                case .none, .solid:
+                    break
+                case .sand:
+                    if finalChoice != nil {
+                        if finalChoice!.priority == 1 || finalChoice!.priority > Double.random(in: 0...1) {
+                            print("final Choice Priority: ", finalChoice!.priority)
+                            tempMap[position.x][position.y].type = tempMap[finalChoice!.x][finalChoice!.y].type
+                            tempMap[finalChoice!.x][finalChoice!.y].type = .sand
+                        }
+                    }
+                case .water:
+                    if finalChoice != nil {
+                        tempMap[position.x][position.y].type = tempMap[finalChoice!.x][finalChoice!.y].type
+                        tempMap[finalChoice!.x][finalChoice!.y].type = .water
+                    }
+            }
+//        }
+        return tempMap
+//        return particles
+    }
+
+    func calcNeighbor(position: (x: Int, y: Int), priority: Double, open: [ParticleType] = [.none]) -> Neighbor? {
+        if position.x < 0 || position.x >= playSize.width || position.y < 0 || position.y >= playSize.height {
+            return nil
+        }
+
+        if !open.contains(map[position.x][position.y].type) {
+            return nil
+        }
+//        if map[position.x][position.y].type != .none {
+//            return nil
+//        }
+
+        return Neighbor(x: position.x, y: position.y, priority: priority)//, type: map[position.x][position.y].type)
     }
 
     func particleColor(particle: Particle) -> Color {

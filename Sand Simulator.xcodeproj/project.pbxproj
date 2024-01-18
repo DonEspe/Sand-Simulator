@@ -12,6 +12,7 @@
 		FEC6695F2B5895AC00414A43 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEC6695E2B5895AC00414A43 /* Assets.xcassets */; };
 		FEC669622B5895AC00414A43 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEC669612B5895AC00414A43 /* Preview Assets.xcassets */; };
 		FEC669692B58981100414A43 /* Particle.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC669682B58981100414A43 /* Particle.swift */; };
+		FEC6696B2B59BE4C00414A43 /* Neighbor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC6696A2B59BE4C00414A43 /* Neighbor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		FEC6695E2B5895AC00414A43 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FEC669612B5895AC00414A43 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		FEC669682B58981100414A43 /* Particle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Particle.swift; sourceTree = "<group>"; };
+		FEC6696A2B59BE4C00414A43 /* Neighbor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Neighbor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 			children = (
 				FEC6695A2B5895AA00414A43 /* Sand_SimulatorApp.swift */,
 				FEC6695C2B5895AA00414A43 /* ContentView.swift */,
+				FEC6696A2B59BE4C00414A43 /* Neighbor.swift */,
 				FEC669682B58981100414A43 /* Particle.swift */,
 				FEC6695E2B5895AC00414A43 /* Assets.xcassets */,
 				FEC669602B5895AC00414A43 /* Preview Content */,
@@ -143,6 +146,7 @@
 				FEC6695D2B5895AA00414A43 /* ContentView.swift in Sources */,
 				FEC669692B58981100414A43 /* Particle.swift in Sources */,
 				FEC6695B2B5895AA00414A43 /* Sand_SimulatorApp.swift in Sources */,
+				FEC6696B2B59BE4C00414A43 /* Neighbor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
