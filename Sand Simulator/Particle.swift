@@ -12,6 +12,7 @@ enum ParticleType: String, CaseIterable {
     case sand = "sand"
     case solid = "solid"
     case water = "water"
+    case snow = "snow"
     case none = "blank"
 }
 
