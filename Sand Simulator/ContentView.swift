@@ -5,16 +5,18 @@
 //  Created by Don Espe on 1/17/24.
 //
 
-import SwiftUI  //FIXME: Switch to spritekit or something....
+import SwiftUI
 
 let playSize = (width: 150, height: 200)
 
 struct ContentView: View {
-    let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.06, on: .main, in: .common).autoconnect()
     @State var paused = true
 
     @State var map = Array(repeating: Array(repeating: Particle(type: .none), count: Int(playSize.height)), count: Int(playSize.width))
     @State var drawType: ParticleType = .sand
+
+    var trackReset = [(x: Int, y: Int)]()
 
     var body: some View {
         VStack {
@@ -59,7 +61,7 @@ struct ContentView: View {
             .frame(width: CGFloat(playSize.width * 2), height: CGFloat(playSize.height * 2))
             .padding()
 
-            Picker("View Style", selection: $drawType) {
+            Picker("Particle type", selection: $drawType) {
                 ForEach(ParticleType.allCases, id: \.self) {
                     Text($0.rawValue)
                 }
@@ -68,6 +70,12 @@ struct ContentView: View {
 
             Toggle(isOn: $paused) {
                 Text("Pause")
+            }
+
+            Button(action: {
+                map = Array(repeating: Array(repeating: Particle(type: .none), count: Int(playSize.height)), count: Int(playSize.width))
+            }) {
+                Text("Reset")
             }
 
             Spacer()
@@ -89,6 +97,12 @@ struct ContentView: View {
                     map = moveParticle(particles: map, position: (x: i, y: j))
                 }
             }
+
+//            for i in 0..<playSize.width {
+//                for j in (0..<playSize.height) {
+//                    map[i][j].moved = false
+//                }
+//            }
         })
         .onAppear {
             for _ in 0...1000 {
@@ -108,14 +122,20 @@ struct ContentView: View {
         var tempMap = particles
         var neighbors = [Neighbor]()
         switch particle.type {
+            case .solid:
+                return tempMap
+
+            case .none:
+                return tempMap
+
             case .sand:
-                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.water, .none]) {
+                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.water, .none, .fire, .steam]) {
                     neighbors.append(down)
                 }
-                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: 0.5, open: [.water, .none]) {
+                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: 0.75, open: [.water, .none, .fire, .steam]) {
                     neighbors.append(downRight)
                 }
-                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: 0.5, open: [.water, .none]){
+                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: 0.75, open: [.water, .none, .steam]){
                     neighbors.append(downLeft)
                 }
                 if let right = calcNeighbor(position: (x: position.x - 1, y: position.y), priority: 0.1, open: [.none]) {
@@ -124,9 +144,30 @@ struct ContentView: View {
                 if let left = calcNeighbor(position: (x: position.x + 1, y: position.y), priority: 0.1, open: [.none]){
                     neighbors.append(left)
                 }
+                if let right = calcNeighbor(position: (x: position.x - 1, y: position.y), priority: 0.6, open: [.water]) {
+                    neighbors.append(right)
+                }
+                if let left = calcNeighbor(position: (x: position.x + 1, y: position.y), priority: 0.6, open: [.water]){
+                    neighbors.append(left)
+                }
 
-            case .solid:
-                return tempMap
+
+            case .fire:
+                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.water, .none, .snow, .ice]) {
+                    neighbors.append(down)
+                }
+                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: 0.75, open: [.water, .none, .snow, .ice]) {
+                    neighbors.append(downRight)
+                }
+                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: 0.75, open: [.water, .none, .snow, .ice]){
+                    neighbors.append(downLeft)
+                }
+                if let right = calcNeighbor(position: (x: position.x - 1, y: position.y), priority: 0.2, open: [.water, .snow, .ice, .none]) {
+                    neighbors.append(right)
+                }
+                if let left = calcNeighbor(position: (x: position.x + 1, y: position.y), priority: 0.2, open: [.water, .snow, .ice, .none]){
+                    neighbors.append(left)
+                }
 
             case .snow:
                 if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.none, .sand, .water]) {
@@ -139,26 +180,45 @@ struct ContentView: View {
                     neighbors.append(downLeft)
                 }
 
-            case .water:
-
-                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.none]) {
+            case .ice:
+                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.none, .sand, .water]) {
                     neighbors.append(down)
                 }
-                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: 0.75, open: [.none]) {
-                    neighbors.append(downRight)
-                }
-                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: 0.75, open: [.none]){
-                    neighbors.append(downLeft)
-                }
-                if let right = calcNeighbor(position: (x: position.x - 1, y: position.y), priority: 0.5, open: [.none]) {
+                if let right = calcNeighbor(position: (x: position.x - 1, y: position.y), priority: 0.1, open: [.water]) {
                     neighbors.append(right)
                 }
-                if let left = calcNeighbor(position: (x: position.x + 1, y: position.y), priority: 0.5, open: [.none]){
+                if let left = calcNeighbor(position: (x: position.x + 1, y: position.y), priority: 0.1, open: [.water]) {
                     neighbors.append(left)
                 }
 
-            case .none:
-                return tempMap
+            case .water:
+                if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.none, .fire, .steam]) {
+                    neighbors.append(down)
+                }
+                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: 0.95, open: [.none, .fire, .steam]) {
+                    neighbors.append(downRight)
+                }
+                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: 0.95, open: [.none, .fire, .steam]){
+                    neighbors.append(downLeft)
+                }
+                if let right = calcNeighbor(position: (x: position.x - 1, y: position.y), priority: 0.8, open: [.none, .fire]) {
+                    neighbors.append(right)
+                }
+                if let left = calcNeighbor(position: (x: position.x + 1, y: position.y), priority: 0.8, open: [.none, .fire]) {
+                    neighbors.append(left)
+                }
+
+            case .steam:
+                if let up = calcNeighbor(position: (x: position.x, y: position.y - 1), priority: 1.0, open: [.none, .fire, .water]) {
+                    neighbors.append(up)
+                }
+                if let upRight = calcNeighbor(position: (x: position.x - 1, y: position.y - 1), priority: 0.75, open: [.none, .fire, .water]) {
+                    neighbors.append(upRight)
+                }
+                if let upLeft = calcNeighbor(position: (x: position.x + 1, y: position.y - 1), priority: 0.75, open: [.none, .fire, .water]){
+                    neighbors.append(upLeft)
+                }
+
         }
         var finalChoice:Neighbor? = nil
 
@@ -174,31 +234,72 @@ struct ContentView: View {
         {
             case .none, .solid:
                 break
+
             case .sand:
-                //                    if finalChoice != nil {
                 if finalChoice!.priority == 1 || finalChoice!.priority > Double.random(in: 0...1) {
                     tempMap[position.x][position.y].type = tempMap[finalChoice!.x][finalChoice!.y].type
                     tempMap[finalChoice!.x][finalChoice!.y].type = .sand
                 }
-                //                    }
+            case .steam:
+                if position.y <= 2 {
+                    tempMap[position.x][position.y].type = .none
+                } else if !tempMap[position.x][position.y].moved {
+                    tempMap[position.x][position.y].type = tempMap[finalChoice!.x][finalChoice!.y].type
+                    tempMap[position.x][position.y].moved = false
+                    tempMap[finalChoice!.x][finalChoice!.y].type = .steam
+                    tempMap[finalChoice!.x][finalChoice!.y].moved = true
+                } else {
+                    tempMap[position.x][position.y].moved = false
+                }
+
             case .snow:
-                //                    if finalChoice != nil {
-                //                        tempMap[position.x][position.y].type = tempMap[finalChoice!.x][finalChoice!.y].type
                 if tempMap[finalChoice!.x][finalChoice!.y].type == .water || tempMap[finalChoice!.x][finalChoice!.y].type == .sand {
                     tempMap[position.x][position.y].type = .water
                 } else {
-                    tempMap[position.x][position.y].type = tempMap[finalChoice!.x][finalChoice!.y].type
+                    tempMap[position.x][position.y].type = .none //tempMap[finalChoice!.x][finalChoice!.y].type
                     tempMap[finalChoice!.x][finalChoice!.y].type = .snow
                 }
-                //                    }
 
             case .water:
-                //                    if finalChoice != nil {
-                tempMap[position.x][position.y].type = tempMap[finalChoice!.x][finalChoice!.y].type
-                tempMap[finalChoice!.x][finalChoice!.y].type = .water
-                //                    }
+                if tempMap[finalChoice!.x][finalChoice!.y].type == .ice  {
+                  /*  tempMap[finalChoice!.x][finalChoice!.y].type == .snow ||*/ /*tempMap[finalChoice!.x][finalChoice!.y].type == .ice*/
+                    tempMap[position.x][position.y].type = .ice
+                } else if tempMap[finalChoice!.x][finalChoice!.y].type == .fire {
+                    tempMap[position.x][position.y].type = .none //tempMap[finalChoice!.x][finalChoice!.y].type
+                    tempMap[finalChoice!.x][finalChoice!.y].type = .steam
+                } else {
+                    tempMap[position.x][position.y].type = tempMap[finalChoice!.x][finalChoice!.y].type
+                    tempMap[finalChoice!.x][finalChoice!.y].type = .water
+                }
+
+            case .ice:
+                if tempMap[finalChoice!.x][finalChoice!.y].type == .sand {
+                    tempMap[position.x][position.y].type = .water
+                } else if tempMap[finalChoice!.x][finalChoice!.y].type == .water {
+                    tempMap[position.x][position.y].type = .ice
+                    tempMap[finalChoice!.x][finalChoice!.y].type = .ice
+                } else {
+                    tempMap[position.x][position.y].type = .none
+                    tempMap[finalChoice!.x][finalChoice!.y].type = .ice
+                }
+
+            case .fire:
+                if tempMap[finalChoice!.x][finalChoice!.y].type == .water {
+                    tempMap[position.x][position.y].type = .steam
+                    tempMap[finalChoice!.x][finalChoice!.y].type = .steam
+                } else if tempMap[finalChoice!.x][finalChoice!.y].type == .snow || tempMap[finalChoice!.x][finalChoice!.y].type == .ice {
+                    tempMap[position.x][position.y].type = .steam
+                    tempMap[finalChoice!.x][finalChoice!.y].type = .steam
+                } else {
+                    tempMap[position.x][position.y].type = .none
+                    tempMap[finalChoice!.x][finalChoice!.y].type = .fire
+                }
         }
         return tempMap
+    }
+
+    mutating func trackParticle(x: Int, y: Int) {
+        trackReset.append((x: x, y: y))
     }
 
     func calcNeighbor(position: (x: Int, y: Int), priority: Double, open: [ParticleType] = [.none]) -> Neighbor? {
@@ -223,6 +324,12 @@ struct ContentView: View {
                 return .blue
             case .snow:
                 return .white
+            case .steam:
+                return .gray.opacity(0.4)
+            case .ice:
+                return .teal
+            case .fire:
+                return .red
             case .none:
                 return .clear
         }

@@ -13,6 +13,9 @@ enum ParticleType: String, CaseIterable {
     case solid = "solid"
     case water = "water"
     case snow = "snow"
+    case ice = "ice"
+    case fire = "fire"
+    case steam = "steam"
     case none = "blank"
 }
 
@@ -20,4 +23,5 @@ struct Particle: Identifiable {
     var id = UUID()
 //    var position: CGPoint
     var type: ParticleType
+    var moved = false
 }
