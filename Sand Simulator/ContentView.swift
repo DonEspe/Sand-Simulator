@@ -10,7 +10,7 @@ import SwiftUI
 let playSize = (width: 150, height: 200)
 
 struct ContentView: View {
-    let timer = Timer.publish(every: 0.06, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
     @State var paused = true
 
     @State var map = Array(repeating: Array(repeating: Particle(type: .none), count: Int(playSize.height)), count: Int(playSize.width))
@@ -56,10 +56,6 @@ struct ContentView: View {
                                         }
                                     }
                                 }
-//                                map[useLocation.x][useLocation.y].type = drawType
-//                                map[useLocation.x + 1][useLocation.y].type = drawType
-//                                map[useLocation.x][useLocation.y + 1].type = drawType
-//                                map[useLocation.x + 1][useLocation.y + 1].type = drawType
                             }
                         }
                         .onEnded { _ in
@@ -113,12 +109,6 @@ struct ContentView: View {
                     map = moveParticle(particles: map, position: (x: i, y: j))
                 }
             }
-
-//            for i in 0..<playSize.width {
-//                for j in (0..<playSize.height) {
-//                    map[i][j].moved = false
-//                }
-//            }
         })
         .onAppear {
             for _ in 0...1000 {
@@ -251,13 +241,13 @@ struct ContentView: View {
                     neighbors.append(left4)
                 }
             case .steam:
-                if let up = calcNeighbor(position: (x: position.x, y: position.y - 1), priority: 1.0, open: [.none, .fire, .water, .snow]) {
+                if let up = calcNeighbor(position: (x: position.x, y: position.y - 1), priority: 1.0, open: [.none, .fire, .water, .snow, .ice]) {
                     neighbors.append(up)
                 }
-                if let upRight = calcNeighbor(position: (x: position.x - 1, y: position.y - 1), priority: 0.75, open: [.none, .fire, .water, .snow]) {
+                if let upRight = calcNeighbor(position: (x: position.x - 1, y: position.y - 1), priority: 0.75, open: [.none, .fire, .water, .snow, .ice]) {
                     neighbors.append(upRight)
                 }
-                if let upLeft = calcNeighbor(position: (x: position.x + 1, y: position.y - 1), priority: 0.75, open: [.none, .fire, .water, .snow]){
+                if let upLeft = calcNeighbor(position: (x: position.x + 1, y: position.y - 1), priority: 0.75, open: [.none, .fire, .water, .snow, .ice]){
                     neighbors.append(upLeft)
                 }
 
