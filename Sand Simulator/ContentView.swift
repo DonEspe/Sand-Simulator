@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-let playSize = (width: 150, height: 200)
+let playSize = (width: 150, height: 180)
 
 struct ContentView: View {
     let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
@@ -36,7 +36,7 @@ struct ContentView: View {
                             context.fill(
 
                             Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2)), cornerSize: CGSize(width: 0, height: 0)),
-                                 with: .color(particleColor(particle: map[x][y])))
+                            with: .color(map[x][y].color()))
                         }
                     }
                 }
@@ -63,10 +63,10 @@ struct ContentView: View {
                         }
                 )
 
-
             }
             .frame(width: CGFloat(playSize.width * 2), height: CGFloat(playSize.height * 2))
             .padding()
+            .scaledToFill()
 
             Picker("Particle type", selection: $drawType) {
                 ForEach(ParticleType.allCases, id: \.self) {
@@ -353,27 +353,6 @@ struct ContentView: View {
         }
 
         return Neighbor(x: position.x, y: position.y, priority: priority)
-    }
-
-    func particleColor(particle: Particle) -> Color {
-        switch particle.type {
-            case .sand:
-                return .yellow
-            case .solid:
-                return .gray
-            case .water:
-                return .blue
-            case .snow:
-                return .white
-            case .steam:
-                return .gray.opacity(0.4)
-            case .ice:
-                return .teal
-            case .fire:
-                return .red
-            case .none:
-                return .clear
-        }
     }
 }
 
