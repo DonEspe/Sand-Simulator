@@ -25,8 +25,13 @@ struct Particle: Identifiable {
 //    var position: CGPoint
     var type: ParticleType
     var moved = false
+    var active = true
 
     func color() -> Color {
+//        if active {
+//            return .green
+//        }
+
         switch type {
             case .sand:
                 return .yellow

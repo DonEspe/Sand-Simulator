@@ -12,6 +12,7 @@ let playSize = (width: 150, height: 180)
 struct ContentView: View {
     let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
     @State var paused = true
+    @State var showActive = false
 
     @State var map = Array(repeating: Array(repeating: Particle(type: .none), count: Int(playSize.height)), count: Int(playSize.width))
     @State var drawType: ParticleType = .sand
@@ -34,16 +35,20 @@ struct ContentView: View {
                     for y in 0..<playSize.height {
                         for x in 0..<playSize.width {
                             context.fill(
+                                Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2)), cornerSize: CGSize(width: 0, height: 0)),
+                                with: (.color(map[x][y].color())))
 
-                            Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2)), cornerSize: CGSize(width: 0, height: 0)),
-                            with: .color(map[x][y].color()))
+                            if showActive {
+                                context.fill(
+                                    Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2)), cornerSize: CGSize(width: 0, height: 0)),
+                                    with: (map[x][y].active ? .color(.green.opacity(0.25)) : .color(.clear)))
+                            }
                         }
                     }
                 }
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-//                            paused = true
                             let radius = Int(drawSize)
                             let useLocation = (x: Int(value.location.x / 2), y: Int(value.location.y / 2))
                             if useLocation.y < playSize.height - 1 && useLocation.x < playSize.width - 1 && useLocation.x > 0 && useLocation.y > 0 {
@@ -52,6 +57,7 @@ struct ContentView: View {
                                         if ((i - useLocation.x) * (i - useLocation.x)) + ((j - useLocation.y) * (j - useLocation.y)) < radius * 2 {
                                             if i > 0 && i < playSize.width && j > 0 && j < playSize.height {
                                                 map[i][j].type = drawType
+                                                map[i][j].active = true
                                             }
                                         }
                                     }
@@ -59,7 +65,6 @@ struct ContentView: View {
                             }
                         }
                         .onEnded { _ in
-//                            paused = false
                         }
                 )
 
@@ -83,9 +88,12 @@ struct ContentView: View {
             Toggle(isOn: $paused) {
                 Text("Pause")
             }
+            Toggle(isOn: $showActive) {
+                Text("Show active")
+            }
 
             Button(action: {
-                map = Array(repeating: Array(repeating: Particle(type: .none), count: Int(playSize.height)), count: Int(playSize.width))
+                map = Array(repeating: Array(repeating: Particle(type: .none, active: true), count: Int(playSize.height)), count: Int(playSize.width))
             }) {
                 Text("Reset")
             }
@@ -96,8 +104,9 @@ struct ContentView: View {
             if paused {
                 return
             }
-
-            map[Int.random(in: 0..<playSize.width)][0].type = drawType
+            let randomLoc = Int.random(in: 0..<playSize.width)
+            map[randomLoc][0].type = drawType
+            map[randomLoc][0].active = true
 //            map[Int.random(in: 0..<playSize.width)][0].type = .snow
 //            map[Int.random(in: 0..<playSize.width)][0].type = .sand
 //            map[Int.random(in: 0..<playSize.width)][0].type = .sand
@@ -106,7 +115,9 @@ struct ContentView: View {
 
             for i in 0..<playSize.width {
                 for j in (0..<playSize.height).reversed() {
-                    map = moveParticle(particles: map, position: (x: i, y: j))
+                    if map[i][j].active {
+                        map = moveParticle(particles: map, position: (x: i, y: j))
+                    }
                 }
             }
         })
@@ -121,11 +132,21 @@ struct ContentView: View {
     }
 
     func moveParticle(particles: [[Particle]], position: (x: Int, y: Int)) -> [[Particle]] {
+        
         let particle = map[position.x][position.y]
-        if particle.type == .none || particle.type == .solid {
+
+        if !particle.active {
             return particles
         }
+
         var tempMap = particles
+
+        if particle.type == .none || particle.type == .solid || !particle.active {
+            tempMap[position.x][position.y].active = false
+            return tempMap
+        }
+
+//        tempMap[position.x][position.y].active = false
         var neighbors = [Neighbor]()
         switch particle.type {
             case .solid:
@@ -203,13 +224,13 @@ struct ContentView: View {
                 if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.none, .fire, .snow]) {
                     neighbors.append(down)
                 }
-                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: vertPriority, open: [.none, .fire, .snow, .water]) {
+                if let downRight = calcNeighbor(position: (x: position.x - 1, y: position.y + 1), priority: vertPriority, open: [.none, .fire, .snow]) {
                     neighbors.append(downRight)
                     if let downRight2 = calcNeighbor(position: (x: position.x - 2, y: position.y + 2), priority: vertPriority, open: [.none]) {
                         neighbors.append(downRight2)
                     }
                 }
-                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: vertPriority, open: [.none, .fire, .snow, .water]) {
+                if let downLeft = calcNeighbor(position: (x: position.x + 1, y: position.y + 1), priority: vertPriority, open: [.none, .fire, .snow]) {
                     neighbors.append(downLeft)
                     if let downLeft2 = calcNeighbor(position: (x: position.x + 2, y: position.y + 2), priority: vertPriority, open: [.none]) {
                         neighbors.append(downLeft2)
@@ -252,6 +273,28 @@ struct ContentView: View {
                 }
 
         }
+
+        if !neighbors.isEmpty {
+            for i in (position.x - 3)...(position.x + 3) {
+                for j in (position.y - 3)...(position.y + 3) {
+                    if i >= 0 && i < (playSize.width) && j >= 0 && j < (playSize.height) {
+                        tempMap[i][j].active = true
+                    }
+                }
+            }
+        } else {
+            tempMap[position.x][position.y].active = false
+            return tempMap
+        }
+
+//        for item in neighbors {
+//            tempMap[item.x][item.y].active = true
+//        }
+        if tempMap[position.x][position.y].type == .solid || tempMap[position.x][position.y].type == .none || !tempMap[position.x][position.y].active {
+//            tempMap[position.x][position.y].active = false
+            return tempMap
+        }
+
         var finalChoice:Neighbor? = nil
 
         if let highestRank = neighbors.max(by: { $0.priority < $1.priority }) {
@@ -264,6 +307,7 @@ struct ContentView: View {
         guard finalChoice != nil else { return tempMap }
         let finalType = tempMap[finalChoice!.x][finalChoice!.y].type
         let currentChoice = tempMap[position.x][position.y]
+        tempMap[position.x][position.y].active = true
         switch particle.type
         {
             case .none, .solid:
@@ -355,7 +399,6 @@ struct ContentView: View {
         return Neighbor(x: position.x, y: position.y, priority: priority)
     }
 }
-
 
 #Preview {
     ContentView()
