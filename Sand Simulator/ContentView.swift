@@ -55,7 +55,7 @@ struct ContentView: View {
                                 for i in (useLocation.x - radius - 2)...(useLocation.x + radius + 2) {
                                     for j in (useLocation.y - radius - 2)...(useLocation.y + radius + 2) {
                                         if ((i - useLocation.x) * (i - useLocation.x)) + ((j - useLocation.y) * (j - useLocation.y)) < radius * 2 {
-                                            if i > 0 && i < playSize.width && j > 0 && j < playSize.height {
+                                            if i > 0 && i < playSize.width && j > 0 && j < playSize.height && Int.random(in: 0...100) > 70 {
                                                 map[i][j].type = drawType
                                                 map[i][j].active = true
                                             }
