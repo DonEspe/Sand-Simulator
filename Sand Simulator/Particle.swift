@@ -20,6 +20,8 @@ enum ParticleType: String, CaseIterable {
     case none = "blank"
 }
 
+let nonMoving:[ParticleType] = [.none, .solid]
+
 struct Particle: Identifiable {
     var id = UUID()
 //    var position: CGPoint

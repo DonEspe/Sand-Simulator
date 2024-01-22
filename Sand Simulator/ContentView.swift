@@ -58,6 +58,13 @@ struct ContentView: View {
                                             if i > 0 && i < playSize.width && j > 0 && j < playSize.height && Int.random(in: 0...100) > 70 {
                                                 map[i][j].type = drawType
                                                 map[i][j].active = true
+                                                for x in (i - 1)...(i + 1) {
+                                                    for y in (j - 1)...(j + 1) {
+                                                        if x >= 0 && x < (playSize.width) && y >= 0 && y < (playSize.height) {
+                                                            map[x][y].active = true
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -67,7 +74,6 @@ struct ContentView: View {
                         .onEnded { _ in
                         }
                 )
-
             }
             .frame(width: CGFloat(playSize.width * 2), height: CGFloat(playSize.height * 2))
             .padding()
@@ -110,17 +116,17 @@ struct ContentView: View {
             
             for i in 0..<playSize.width {
                 for j in (0..<playSize.height).reversed() {
-                    if map[i][j].active {
+                    if map[i][j].active || nonMoving.contains(map[i][j].type) {
                         map = moveParticle(particles: map, position: (x: i, y: j))
                     }
                 }
             }
         })
         .onAppear {
-            for _ in 0...1000 {
+//            for _ in 0...1000 {
 //                map[Int.random(in: 1..<Int(playSize.width))][ Int.random(in: 1..<Int(playSize.height))] = Particle(type:  ParticleType.allCases.randomElement() ?? .solid)
 //                map[Int.random(in: 0..<Int(playSize.width))][ Int.random(in: 30..<200)] = Particle(type:  ParticleType.solid)
-            }
+//            }
             paused.toggle()
         }
 //        .animation(.linear, value: colony)
@@ -136,17 +142,14 @@ struct ContentView: View {
 
         var tempMap = particles
 
-        if particle.type == .none || particle.type == .solid || !particle.active {
+        if nonMoving.contains(particle.type) || !particle.active {
             tempMap[position.x][position.y].active = false
             return tempMap
         }
 
         var neighbors = [Neighbor]()
         switch particle.type {
-            case .solid:
-                return tempMap
-
-            case .none:
+            case .solid, .none:
                 return tempMap
 
             case .sand:
@@ -268,8 +271,8 @@ struct ContentView: View {
         }
 
         if !neighbors.isEmpty {
-            for i in (position.x - 3)...(position.x + 3) {
-                for j in (position.y - 3)...(position.y + 3) {
+            for i in (position.x - 1)...(position.x + 1) {
+                for j in (position.y - 1)...(position.y + 1) {
                     if i >= 0 && i < (playSize.width) && j >= 0 && j < (playSize.height) {
                         tempMap[i][j].active = true
                     }
@@ -281,7 +284,7 @@ struct ContentView: View {
         }
 
 
-        if tempMap[position.x][position.y].type == .solid || tempMap[position.x][position.y].type == .none || !tempMap[position.x][position.y].active {
+        if nonMoving.contains(particle.type) || !tempMap[position.x][position.y].active {
             return tempMap
         }
 
@@ -298,6 +301,7 @@ struct ContentView: View {
         let finalType = tempMap[finalChoice!.x][finalChoice!.y].type
         let currentChoice = tempMap[position.x][position.y]
         tempMap[position.x][position.y].active = true
+        tempMap[finalChoice!.x][finalChoice!.y].active = true
         switch particle.type
         {
             case .none, .solid:
