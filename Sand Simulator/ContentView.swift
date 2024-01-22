@@ -107,12 +107,7 @@ struct ContentView: View {
             let randomLoc = Int.random(in: 0..<playSize.width)
             map[randomLoc][0].type = drawType
             map[randomLoc][0].active = true
-//            map[Int.random(in: 0..<playSize.width)][0].type = .snow
-//            map[Int.random(in: 0..<playSize.width)][0].type = .sand
-//            map[Int.random(in: 0..<playSize.width)][0].type = .sand
-//            map[Int.random(in: 0..<playSize.width)][0].type = .sand
-//            map[Int.random(in: 0..<playSize.width)][0].type = .water
-
+            
             for i in 0..<playSize.width {
                 for j in (0..<playSize.height).reversed() {
                     if map[i][j].active {
@@ -146,7 +141,6 @@ struct ContentView: View {
             return tempMap
         }
 
-//        tempMap[position.x][position.y].active = false
         var neighbors = [Neighbor]()
         switch particle.type {
             case .solid:
@@ -271,7 +265,6 @@ struct ContentView: View {
                 if let upLeft = calcNeighbor(position: (x: position.x + 1, y: position.y - 1), priority: 0.75, open: [.none, .fire, .water, .snow, .ice]){
                     neighbors.append(upLeft)
                 }
-
         }
 
         if !neighbors.isEmpty {
@@ -287,11 +280,8 @@ struct ContentView: View {
             return tempMap
         }
 
-//        for item in neighbors {
-//            tempMap[item.x][item.y].active = true
-//        }
+
         if tempMap[position.x][position.y].type == .solid || tempMap[position.x][position.y].type == .none || !tempMap[position.x][position.y].active {
-//            tempMap[position.x][position.y].active = false
             return tempMap
         }
 

@@ -28,9 +28,6 @@ struct Particle: Identifiable {
     var active = true
 
     func color() -> Color {
-//        if active {
-//            return .green
-//        }
 
         switch type {
             case .sand:
