@@ -7,16 +7,28 @@
 
 import SwiftUI
 
-let playSize = (width: 150, height: 180)
+let actualSize = (width: 350, height: 500)
+let scale = 4
+let playSize = (width: actualSize.width / scale, height: actualSize.height / scale)
 
 struct ContentView: View {
     let timer = Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()
+
     @State var paused = true
     @State var showActive = false
 
     @State var map = Array(repeating: Array(repeating: Particle(type: .none), count: Int(playSize.height)), count: Int(playSize.width))
     @State var drawType: ParticleType = .sand
     @State var drawSize = 5.0
+
+    @State var hueCounter = 0.0 {
+        didSet {
+            if hueCounter > 1 {
+                hueCounter = 0
+            }
+        }
+    }
+
 
     var trackReset = [(x: Int, y: Int)]()
 
@@ -32,15 +44,15 @@ struct ContentView: View {
                     .foregroundColor(.blue)
 
                 Canvas { context, size in
-                    for y in 0..<playSize.height {
-                        for x in 0..<playSize.width {
+                    for y in 0..<(playSize.height) {
+                        for x in 0..<(playSize.width) {
                             context.fill(
-                                Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2)), cornerSize: CGSize(width: 0, height: 0)),
+                                Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
                                 with: (.color(map[x][y].color())))
 
                             if showActive {
                                 context.fill(
-                                    Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * 2), y: CGFloat(y * 2)), size: CGSize(width: 2, height: 2)), cornerSize: CGSize(width: 0, height: 0)),
+                                    Path(roundedRect: CGRect(origin: CGPoint(x: CGFloat(x * scale), y: CGFloat(y * scale)), size: CGSize(width: scale, height: scale)), cornerSize: CGSize(width: 0, height: 0)),
                                     with: (map[x][y].active ? .color(.green.opacity(0.25)) : .color(.clear)))
                             }
                         }
@@ -49,14 +61,18 @@ struct ContentView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
+                            if drawType == .rainbowSand {
+                                self.hueCounter += 0.001
+                            }
                             let radius = Int(drawSize)
-                            let useLocation = (x: Int(value.location.x / 2), y: Int(value.location.y / 2))
+                            let useLocation = (x: Int(value.location.x / CGFloat(scale)), y: Int(value.location.y / CGFloat(scale)))
                             if useLocation.y < playSize.height - 1 && useLocation.x < playSize.width - 1 && useLocation.x > 0 && useLocation.y > 0 {
                                 for i in (useLocation.x - radius - 2)...(useLocation.x + radius + 2) {
                                     for j in (useLocation.y - radius - 2)...(useLocation.y + radius + 2) {
                                         if ((i - useLocation.x) * (i - useLocation.x)) + ((j - useLocation.y) * (j - useLocation.y)) < radius * 2 {
                                             if i > 0 && i < playSize.width && j > 0 && j < playSize.height && Int.random(in: 0...100) > 70 {
                                                 map[i][j].type = drawType
+                                                map[i][j].hueCount = hueCounter
                                                 map[i][j].active = true
                                                 for x in (i - 1)...(i + 1) {
                                                     for y in (j - 1)...(j + 1) {
@@ -75,16 +91,20 @@ struct ContentView: View {
                         }
                 )
             }
-            .frame(width: CGFloat(playSize.width * 2), height: CGFloat(playSize.height * 2))
+            .frame(width: CGFloat(playSize.width * scale), height: CGFloat(playSize.height * scale))
             .padding()
             .scaledToFill()
-
-            Picker("Particle type", selection: $drawType) {
-                ForEach(ParticleType.allCases, id: \.self) {
-                    Text($0.rawValue)
+            HStack {
+                Spacer()
+                Text("Particle type: ")
+                Picker("Particle type", selection: $drawType) {
+                    ForEach(ParticleType.allCases, id: \.self) {
+                        Text($0.rawValue)
+                    }
                 }
+                .pickerStyle(.menu)
+                Spacer()
             }
-            .pickerStyle(.segmented)
 
             HStack {
                 Text("Draw size (\(Int(drawSize))): ")
@@ -113,7 +133,11 @@ struct ContentView: View {
             let randomLoc = Int.random(in: 0..<playSize.width)
             map[randomLoc][0].type = drawType
             map[randomLoc][0].active = true
-            
+            if drawType == .rainbowSand {
+                self.hueCounter += 0.0005
+                map[randomLoc][0].hueCount = hueCounter
+            }
+
             for i in 0..<playSize.width {
                 for j in (0..<playSize.height).reversed() {
                     if map[i][j].active || nonMoving.contains(map[i][j].type) {
@@ -152,7 +176,7 @@ struct ContentView: View {
             case .solid, .none:
                 return tempMap
 
-            case .sand:
+            case .sand, .rainbowSand:
                 if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.water, .none, .fire, .steam]) {
                     neighbors.append(down)
                 }
@@ -307,12 +331,12 @@ struct ContentView: View {
             case .none, .solid:
                 break
 
-            case .sand:
+            case .sand, .rainbowSand:
                 if (finalChoice!.priority == 1 || finalChoice!.priority > Double.random(in: 0...1)) {
                     if !currentChoice.moved || (finalType != .water && finalType != .steam ) {
                         tempMap[finalChoice!.x][finalChoice!.y].moved = true
                         tempMap[position.x][position.y].type = finalType
-                        tempMap[finalChoice!.x][finalChoice!.y].type = .sand
+                        tempMap[finalChoice!.x][finalChoice!.y] = particle //.sand
                     }  else {
                         tempMap[position.x][position.y].moved = false
                     }
@@ -331,7 +355,7 @@ struct ContentView: View {
                 }
 
             case .snow:
-                if finalType == .water || finalType == .sand {
+                if finalType == .water || finalType == .sand || finalType == .rainbowSand{
                     tempMap[position.x][position.y].type = .water
                 } else {
                     tempMap[position.x][position.y].type = .none
@@ -352,7 +376,7 @@ struct ContentView: View {
                 }
 
             case .ice:
-                if finalType == .sand {
+                if finalType == .sand || finalType == .rainbowSand {
                     tempMap[position.x][position.y].type = .water
                 } else if finalType == .water {
                     tempMap[position.x][position.y].type = .ice
