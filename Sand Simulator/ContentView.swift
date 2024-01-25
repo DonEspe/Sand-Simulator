@@ -8,7 +8,7 @@
 import SwiftUI
 
 let actualSize = (width: 350, height: 500)
-let scale = 4
+let scale = 3
 let playSize = (width: actualSize.width / scale, height: actualSize.height / scale)
 
 struct ContentView: View {
@@ -16,10 +16,11 @@ struct ContentView: View {
 
     @State var paused = true
     @State var showActive = false
+    @State var rainParticles = true
 
     @State var map = Array(repeating: Array(repeating: Particle(type: .none), count: Int(playSize.height)), count: Int(playSize.width))
     @State var drawType: ParticleType = .sand
-    @State var drawSize = 5.0
+    @State var drawSize = 10.0
 
     @State var hueCounter = 0.0 {
         didSet {
@@ -66,11 +67,11 @@ struct ContentView: View {
                             }
                             let radius = Int(drawSize)
                             let useLocation = (x: Int(value.location.x / CGFloat(scale)), y: Int(value.location.y / CGFloat(scale)))
-                            if useLocation.y < playSize.height - 1 && useLocation.x < playSize.width - 1 && useLocation.x > 0 && useLocation.y > 0 {
+                            if useLocation.y < playSize.height - 1 && useLocation.x < playSize.width - 1 && useLocation.x >= 0 && useLocation.y >= 0 {
                                 for i in (useLocation.x - radius - 2)...(useLocation.x + radius + 2) {
                                     for j in (useLocation.y - radius - 2)...(useLocation.y + radius + 2) {
                                         if ((i - useLocation.x) * (i - useLocation.x)) + ((j - useLocation.y) * (j - useLocation.y)) < radius * 2 {
-                                            if i > 0 && i < playSize.width && j > 0 && j < playSize.height && Int.random(in: 0...100) > 70 {
+                                            if i >= 0 && i < playSize.width && j >= 0 && j < playSize.height && Int.random(in: 0...100) > 70 {
                                                 map[i][j].type = drawType
                                                 map[i][j].hueCount = hueCounter
                                                 map[i][j].active = true
@@ -117,6 +118,9 @@ struct ContentView: View {
             Toggle(isOn: $showActive) {
                 Text("Show active")
             }
+            Toggle(isOn: $rainParticles) {
+                Text("Rain particles")
+            }
 
             Button(action: {
                 map = Array(repeating: Array(repeating: Particle(type: .none, active: true), count: Int(playSize.height)), count: Int(playSize.width))
@@ -130,12 +134,15 @@ struct ContentView: View {
             if paused {
                 return
             }
-            let randomLoc = Int.random(in: 0..<playSize.width)
-            map[randomLoc][0].type = drawType
-            map[randomLoc][0].active = true
-            if drawType == .rainbowSand {
-                self.hueCounter += 0.0005
-                map[randomLoc][0].hueCount = hueCounter
+
+            if rainParticles && drawType != .solid {
+                let randomLoc = Int.random(in: 0..<playSize.width)
+                map[randomLoc][0].type = drawType
+                map[randomLoc][0].active = true
+                if drawType == .rainbowSand {
+                    self.hueCounter += 0.0005
+                    map[randomLoc][0].hueCount = hueCounter
+                }
             }
 
             for i in 0..<playSize.width {
@@ -240,7 +247,7 @@ struct ContentView: View {
                 }
 
             case .water:
-                let lateralPriority = 0.92
+                let lateralPriority = 0.93
                 let vertPriority = 0.95
                 if let down = calcNeighbor(position: (x: position.x, y: position.y + 1), priority: 1.0, open: [.none, .fire, .snow]) {
                     neighbors.append(down)
