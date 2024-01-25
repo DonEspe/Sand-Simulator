@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-let actualSize = (width: 350, height: 500)
+let actualSize = (width: 350, height: 480)
 let scale = 3
 let playSize = (width: actualSize.width / scale, height: actualSize.height / scale)
 
@@ -38,7 +38,7 @@ struct ContentView: View {
             Text("Sand Simulator")
                 .bold()
                 .font(.title)
-                .padding(.bottom)
+//                .padding(.bottom)
             ZStack {
                 Rectangle()
                     .stroke(lineWidth: 1)
@@ -111,15 +111,17 @@ struct ContentView: View {
                 Text("Draw size (\(Int(drawSize))): ")
                 Slider(value: $drawSize, in: 1...50)
             }
+            HStack {
+                Toggle(isOn: $rainParticles) {
+                    Text("Rain particles")
+                }
 
-            Toggle(isOn: $paused) {
-                Text("Pause")
+                Toggle(isOn: $paused) {
+                    Text("Pause")
+                }
             }
             Toggle(isOn: $showActive) {
                 Text("Show active")
-            }
-            Toggle(isOn: $rainParticles) {
-                Text("Rain particles")
             }
 
             Button(action: {
