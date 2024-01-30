@@ -59,6 +59,8 @@ struct ContentView: View {
                         }
                     }
                 }
+                .background(.black)
+
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
@@ -111,11 +113,11 @@ struct ContentView: View {
                 Text("Draw size (\(Int(drawSize))): ")
                 Slider(value: $drawSize, in: 1...50)
             }
-            HStack {
+            HStack(spacing: 10) {
                 Toggle(isOn: $rainParticles) {
                     Text("Rain particles")
                 }
-
+                Spacer()
                 Toggle(isOn: $paused) {
                     Text("Pause")
                 }
@@ -132,6 +134,9 @@ struct ContentView: View {
 
             Spacer()
         }
+        .padding()
+        .containerRelativeFrame([.horizontal, .vertical])
+        .background(Gradient(colors: [.black,.blue, .blue]).opacity(0.6))
         .onReceive(timer, perform: { _ in
             if paused {
                 return
