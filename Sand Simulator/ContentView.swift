@@ -106,6 +106,9 @@ struct ContentView: View {
                     }
                 }
                 .pickerStyle(.menu)
+                .tint(Color.primary.blendMode(.difference))
+                .background(.blue.opacity(0.6))
+                .clipShape(.capsule)
                 Spacer()
             }
 
@@ -128,27 +131,37 @@ struct ContentView: View {
 
             Button(action: {
                 map = Array(repeating: Array(repeating: Particle(type: .none, active: true), count: Int(playSize.height)), count: Int(playSize.width))
+                hueCounter = 0
             }) {
                 Text("Reset")
             }
+            .buttonStyle(.plain)
+            .padding()
+//            .tint(Color.black.blendMode(.difference))
+            .background(.blue.opacity(0.6))
+            .clipShape(.capsule)
 
             Spacer()
         }
         .padding()
         .containerRelativeFrame([.horizontal, .vertical])
-        .background(Gradient(colors: [.black,.blue, .blue]).opacity(0.6))
+        .background(Gradient(colors: [.black, .blue]).opacity(0.8))
         .onReceive(timer, perform: { _ in
             if paused {
                 return
             }
 
             if rainParticles && drawType != .solid {
-                let randomLoc = Int.random(in: 0..<playSize.width)
-                map[randomLoc][0].type = drawType
-                map[randomLoc][0].active = true
+                for _ in 0...3 {
+                    let randomLoc = Int.random(in: 0..<playSize.width)
+                    map[randomLoc][0].type = drawType
+                    map[randomLoc][0].active = true
+                    if drawType == .rainbowSand {
+                        map[randomLoc][0].hueCount = hueCounter
+                    }
+                }
                 if drawType == .rainbowSand {
                     self.hueCounter += 0.0005
-                    map[randomLoc][0].hueCount = hueCounter
                 }
             }
 
