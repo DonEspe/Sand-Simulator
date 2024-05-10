@@ -30,7 +30,6 @@ struct ContentView: View {
         }
     }
 
-
     var trackReset = [(x: Int, y: Int)]()
 
     var body: some View {
@@ -38,6 +37,8 @@ struct ContentView: View {
             Text("Sand Simulator")
                 .bold()
                 .font(.title)
+                .foregroundStyle(.white)
+                .padding()
 //                .padding(.bottom)
             ZStack {
                 Rectangle()
@@ -120,13 +121,20 @@ struct ContentView: View {
                 Toggle(isOn: $rainParticles) {
                     Text("Rain particles")
                 }
+                .toggleStyle(CheckToggleStyle())
                 Spacer()
                 Toggle(isOn: $paused) {
                     Text("Pause")
                 }
+                .toggleStyle(CheckToggleStyle())
             }
-            Toggle(isOn: $showActive) {
-                Text("Show active")
+            HStack {
+
+                Toggle(isOn: $showActive) {
+                    Text("Show active")
+                }
+                .toggleStyle(CheckToggleStyle())
+                Spacer()
             }
 
             Button(action: {
